@@ -1,0 +1,21 @@
+{
+  "name": "coffee-simple-renderer",
+  "version": "0.9.0",
+  "description": "Super simple renderer for coffeescript.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
+  "author": "",
+  "license": "BSD",
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-stitch": "~0.1.0",
+    "nodeunit": "~0.8.1",
+    "grunt-contrib-nodeunit": "~0.2.0"
+  },
+  "dependencies": {
+    "coffee-script": "~1.6.3"
+  }
+}

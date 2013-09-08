@@ -1,0 +1,82 @@
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+
+		<title>Coffee-Simple-Spatial</title>
+
+		<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+		<script type="text/javascript" src="http://code.createjs.com/createjs-2013.05.14.min.js"></script>
+		<script type="text/javascript" src="scripts/coffee-simple-renderer.js"></script>
+
+		<script type="text/javascript">
+
+			function init()
+			{
+				// fetch imports
+				var SceneRenderer = require("renderer/SceneRenderer");
+				var Rect = require("indexing/Rect");
+
+				// Create Easel Stage.
+				var canvas = document.getElementById("canvas");
+				var easelStage = new createjs.Stage(canvas);
+
+				// Create SceneRenderer & basic Scene of objects.
+				// with each having a renderer property. ( renderers should really be pooled )
+				var ix,iy,count = 0;
+				var size = 100; // size of obj dimensions.
+				var obj = null;
+				var sWidth = 80;
+				var sHeight = 40;
+				var renderer = new SceneRenderer(sWidth*size,sHeight*size,5,5,null,easelStage);
+
+				// Size the browser window.
+				$("div#scrollarea").width(sWidth*size);
+				$("div#scrollarea").height(sHeight*size);
+
+				// Watch the scroll..
+				$(window).scroll(function(){
+					renderer.viewportPos($(window).scrollLeft(),$(window).scrollTop());
+				});
+
+				for( ix = 0; ix<sWidth; ix++ ){
+					for( iy = 0; iy<sHeight; iy++ ){
+						obj = {
+							id:count++,
+							rect:new Rect(ix*size,iy*size,size,size),
+							renderer:new createjs.Shape()
+						};
+						obj.renderer.graphics.beginFill("red").drawCircle(40,40,40);
+						renderer.add( obj );
+					}
+				}
+
+				// handle resize of window - canvas & viewport resizing.
+				var resize = function(){
+					easelStage.canvas.width = window.innerWidth;
+					easelStage.canvas.height = window.innerHeight;
+
+					renderer.viewportSize(window.innerWidth,window.innerHeight);
+				};
+
+				$(window).resize( resize );
+				resize();
+
+				// Tick - Update & Render
+				var handleTick = function(){
+					renderer.render(false);
+					easelStage.update();
+				}
+				//handleTick();
+				createjs.Ticker.addEventListener("tick", handleTick);
+			}
+		</script>
+
+	</head>
+
+	<body onload="init();">
+		<canvas id="canvas" style="position:fixed; top:0px; left:0px;"></canvas>
+		<div id="scrollarea"/>
+	</body>
+</html>
