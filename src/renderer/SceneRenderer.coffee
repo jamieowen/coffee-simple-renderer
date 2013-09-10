@@ -4,6 +4,7 @@ Imports
 ###
 SceneIndex = require "indexing/SceneIndex"
 Rect = require "indexing/Rect"
+RendererFactory = require "renderer/RendererFactory"
 
 ###
 SceneRenderer
@@ -13,12 +14,34 @@ Used with EaselJS for now.
 ###
 module.exports = class SceneRenderer
 
-	constructor:(w,h,hDiv,vDiv,@viewport, @easelStage)->
+	###
+  The add to stage
+
+  w = The total width of the scene
+  h = The total height of the scene
+  hDiv = The total divisions horizontally for the spatial index
+  vDiv = The total divisions vertically for the spatial index
+  clearScene = The function to use to clear the rendering scene ( canvas / dom / webgl / etc )
+  addToScene = The function to use to add a renderer to the scene ( canvas / dom / webgl / etc )
+  ###
+	constructor:(w,h,hDiv,vDiv,@clearScene, @addToScene )->
 		if not @viewport
 			@viewport = new Rect 0,0,100,100
 
+		# if we supply no handlers for clearing/adding to the stage
+		# just create empty methods
+		# method sigatures are as defined below
+		if not @clearScene
+			@clearScene = ()->
+				null
+
+		if not @addToScene
+			@addToScene = (renderer,rendererData,x,y)->
+				null
+
+		# create the scene index and the factory
 		@index = new SceneIndex w,h,hDiv,vDiv
-		@renderList = []
+		@factory = new RendererFactory()
 
 	###
   add()
@@ -26,7 +49,7 @@ module.exports = class SceneRenderer
   Add an object to the Renderer.
   object must implement a "rect" property of type indexing.Rect
   ###
-	add:(object) ->
+	add:(rendererData) ->
 		@index.add object
 
 	###
@@ -34,8 +57,17 @@ module.exports = class SceneRenderer
 
 	Removes an object from the Renderer.
   ###
-	remove:(object)->
+	remove:(rendererData)->
 		@index.remove object
+
+
+	###
+	update()
+
+	Updates an object in the index.
+	###
+  update:(rendererData)->
+		@index.update object
 
 	###
   viewportSize()
@@ -57,34 +89,41 @@ module.exports = class SceneRenderer
 	###
   registerRenderer()
 
-  Used to assign a renderer  to a specific object type
-  Not implemented yet.
-  Would need some RendererFactory class.
+  Register a specific rendererType to a rendererClass.
+  Specify a poolCount if you want to instantiate a number of renderers up front.
   ###
-	registerRenderer: (rendererClass, rendererType ) ->
-		return
+	registerRenderer: (rendererType, rendererClass, poolCount) ->
+		@factory.registerRenderer rendererType,rendererClass,poolCount
+		null
+
 
 	###
   render()
 
-  Renders the
+  Handles the rendering and instantiating of the renderers.
+  The clearScene() and addToScene() delegates need to be specified
+  as they do the positioning and assigning of rendererData.
 	###
 	render:() ->
-		# clear the stage.
-		@easelStage.removeAllChildren()
+		# clear the scene
+		@clearScene()
 
 		# clear the renderList
 		@renderList.splice(0)
-		@renderList = @index.find( @viewport )
+		@renderList = @index.find @viewport
 
-		# create renderers
-    # @factory
+		# notify the factory
+    @factory.detach()
 
 		# and add to stage
-		for object in @renderList
-			object.renderer.x = object.rect.left - @viewport.left
-			object.renderer.y = object.rect.top - @viewport.top
-			@easelStage.addChild object.renderer
+		for rendererData in @renderList
+			renderer = @factory.create ren
+			x = object.rect.left - @viewport.left
+			y = object.rect.top - @viewport.top
+
+			@addToScene object.renderer,
+
+			#@easelStage.addChild object.renderer
 
 
 
