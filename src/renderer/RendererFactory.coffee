@@ -1,9 +1,9 @@
 
 ###
 A RendererFactory to instantiate renderer classes from a type identifier.
-
 ###
 module.exports = class RendererFactory
+
 	constructor:()->
 		# map rendererType to a class instance
 		@rendererMap = {}
@@ -14,9 +14,9 @@ module.exports = class RendererFactory
 
 
 	###
-  Register a rendererType with an associated rendererClass and
-  create a number of pooled renderers if required.
-  ###
+	Register a rendererType with an associated rendererClass and
+	create a number of pooled renderers if required.
+	###
 	register:(rendererType, rendererClass, poolCount)->
 		if not poolCount
 			poolCount = 0
@@ -26,24 +26,24 @@ module.exports = class RendererFactory
 			@rendererPool[rendererType] = []
 			if poolCount > 0
 				for i in [0..poolCount]
-					@rendererPool[rendererType].push new rendererClass
+					@rendererPool[rendererType].push new rendererClass()
 
 		return
 
 
 
 	###
-  Detaches renderers and assumes they may not be used again.
-  But holds on to association of rendererData to rendererObject
-  to main
+	Detaches renderers and assumes they may not be used again.
+	But holds on to association of rendererData to rendererObject
+	to main
 	###
 	preCreate:() ->
 		null
 
 
 	###
-  Create a renderer object from the rendererType property
-  of the rendererData object.
+	Create a renderer object from the rendererType property
+	of the rendererData object.
 	###
 	create:(rendererData) ->
 		pool = @rendererPool[rendererType]
@@ -55,9 +55,10 @@ module.exports = class RendererFactory
 
 
 	###
-  Completely frees up renderers and adds them back to the pool
+	Completely frees up renderers and adds them back to the pool
 	###
 	postCreate:()->
+		null
 
 
 

@@ -3,12 +3,12 @@ module.exports = (grunt) ->
 	grunt.initConfig
 		stitch:
 			options:
-				paths:["src/"]
+				paths:["src"]
 				dependencies:[]
 				dest:"public/scripts/coffee-simple-renderer.js"
 
 		nodeunit:
-		  all:["tests/*.test.coffee"]
+			all:["tests/*.test.coffee"]
 
 	grunt.loadNpmTasks('grunt-stitch')
 	grunt.loadNpmTasks('grunt-contrib-nodeunit')

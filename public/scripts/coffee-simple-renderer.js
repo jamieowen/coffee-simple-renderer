@@ -48,7 +48,143 @@
     };
   }
   return this.require.define;
-}).call(this)({"indexing/Partition": function(exports, require, module) {(function() {
+}).call(this)({"examples/EaselJSRenderer": function(exports, require, module) {(function() {
+  var EaselJSRenderer, Rect, SceneBuilder, SceneRenderer,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  SceneRenderer = require("renderer/SceneRenderer");
+
+  SceneBuilder = require("examples/SceneBuilder");
+
+  Rect = require("indexing/Rect");
+
+  EaselJSRenderer = (function() {
+    function EaselJSRenderer(canvas) {
+      var _this = this;
+      this.canvas = canvas;
+      this.addToSceneDelegate = __bind(this.addToSceneDelegate, this);
+      this.builder = SceneBuilder.create();
+      this.renderer = new SceneRenderer(builder.totalWidth, builder.totalHeight, 5, 5, function() {
+        return _this.clearSceneDelegate;
+      }, function() {
+        return _this.addToSceneDelegate;
+      });
+      this.builder.build(this.renderer);
+      this.easel = new createjs.Stage(this.canvas);
+      $(window).resize(this.resize);
+      $(window).scroll(this.scroll);
+      this.resize();
+      createjs.Ticker.addEventListener("tick", tick);
+    }
+
+    /*
+     Handle tick to pass to Renderer.
+     Update Easel.
+    */
+
+
+    EaselJSRenderer.prototype.tick = function() {
+      this.renderer.render(false);
+      return this.easel.update();
+    };
+
+    /*
+    	Clear the Easel Stage
+    */
+
+
+    EaselJSRenderer.prototype.clearSceneDelegate = function() {
+      this.easel.removeAllChildren();
+      return null;
+    };
+
+    /*
+    	Add a renderer to the Easel Stage
+    */
+
+
+    EaselJSRenderer.prototype.addToSceneDelegate = function(renderer, rendererData, x, y) {
+      renderer.x = x;
+      renderer.y = y;
+      this.easel.addChild(renderer);
+      return null;
+    };
+
+    /*
+    	Resize viewport & canvas
+    */
+
+
+    EaselJSRenderer.prototype.resize = function() {
+      this.easel.canvas.width = window.innerWidth;
+      this.easel.canvas.width = window.innherHeight;
+      return this.renderer.viewportSize(window.innerWidth, window.innerHeight);
+    };
+
+    /*
+    	Set viewport scroll position.
+    */
+
+
+    EaselJSRenderer.prototype.scroll = function() {
+      var x, y;
+      x = $(window).scrollLeft();
+      y = $(window).scrollTop();
+      return this.renderer.viewportPos(x, y);
+    };
+
+    return EaselJSRenderer;
+
+  })();
+
+}).call(this);
+}, "examples/SceneBuilder": function(exports, require, module) {(function() {
+  var Rect, SceneBuilder;
+
+  Rect = require("indexing/Rect");
+
+  /*
+  	Class to centralised the build process of the scene to pass between
+  	Renderers ( EaselJS/ WebGL / Canvas / Dom )
+  */
+
+
+  SceneBuilder = (function() {
+    SceneBuilder.createBasic = function() {
+      return new SceneBuilder(100, 80, 40);
+    };
+
+    function SceneBuilder(size, width, height) {
+      this.size = size;
+      this.width = width;
+      this.height = height;
+      this.totalWidth = this.width * this.size;
+      this.totalHeight = this.height * this.size;
+    }
+
+    SceneBuilder.prototype.build = function(renderer) {
+      var count, ix, iy, obj, _i, _j, _ref, _ref1;
+      count = 0;
+      for (ix = _i = 0, _ref = this.width; 0 <= _ref ? _i <= _ref : _i >= _ref; ix = 0 <= _ref ? ++_i : --_i) {
+        for (iy = _j = 0, _ref1 = this.height; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; iy = 0 <= _ref1 ? ++_j : --_j) {
+          count++;
+          obj = {
+            id: count,
+            rect: new Rect(ix * this.size, iy * size, this.size, this.size),
+            rendererType: "myRenderer"
+          };
+          renderer.add(obj);
+        }
+      }
+      return null;
+    };
+
+    return SceneBuilder;
+
+  })();
+
+}).call(this);
+}, "indexing/Partition": function(exports, require, module) {(function() {
   var Partition, Rect;
 
   Rect = require("indexing/Rect");
@@ -208,17 +344,98 @@
   })();
 
 }).call(this);
+}, "renderer/RendererFactory": function(exports, require, module) {/*
+A RendererFactory to instantiate renderer classes from a type identifier.
+*/
+
+
+(function() {
+  var RendererFactory;
+
+  module.exports = RendererFactory = (function() {
+    function RendererFactory() {
+      this.rendererMap = {};
+      this.rendererPool = {};
+      this.rendererList = [];
+    }
+
+    /*
+    	Register a rendererType with an associated rendererClass and
+    	create a number of pooled renderers if required.
+    */
+
+
+    RendererFactory.prototype.register = function(rendererType, rendererClass, poolCount) {
+      var i, _i;
+      if (!poolCount) {
+        poolCount = 0;
+      }
+      if (!this.rendererMap[rendererType]) {
+        this.rendererMap[rendererType] = rendererClass;
+        this.rendererPool[rendererType] = [];
+        if (poolCount > 0) {
+          for (i = _i = 0; 0 <= poolCount ? _i <= poolCount : _i >= poolCount; i = 0 <= poolCount ? ++_i : --_i) {
+            this.rendererPool[rendererType].push(new rendererClass());
+          }
+        }
+      }
+    };
+
+    /*
+    	Detaches renderers and assumes they may not be used again.
+    	But holds on to association of rendererData to rendererObject
+    	to main
+    */
+
+
+    RendererFactory.prototype.preCreate = function() {
+      return null;
+    };
+
+    /*
+    	Create a renderer object from the rendererType property
+    	of the rendererData object.
+    */
+
+
+    RendererFactory.prototype.create = function(rendererData) {
+      var pool;
+      pool = this.rendererPool[rendererType];
+      if (!pool) {
+        return null;
+      }
+      if (pool.length) {
+        return pool.pop();
+      }
+    };
+
+    /*
+    	Completely frees up renderers and adds them back to the pool
+    */
+
+
+    RendererFactory.prototype.postCreate = function() {
+      return null;
+    };
+
+    return RendererFactory;
+
+  })();
+
+}).call(this);
 }, "renderer/SceneRenderer": function(exports, require, module) {/*
 Imports
 */
 
 
 (function() {
-  var Rect, SceneIndex, SceneRenderer;
+  var Rect, RendererFactory, SceneIndex, SceneRenderer;
 
   SceneIndex = require("indexing/SceneIndex");
 
   Rect = require("indexing/Rect");
+
+  RendererFactory = require("renderer/RendererFactory");
 
   /*
   SceneRenderer
@@ -229,43 +446,84 @@ Imports
 
 
   module.exports = SceneRenderer = (function() {
-    function SceneRenderer(w, h, hDiv, vDiv, viewport, easelStage) {
-      this.viewport = viewport;
-      this.easelStage = easelStage;
+    /*
+    	The add to stage
+    
+    	w = The total width of the scene
+    	h = The total height of the scene
+    	hDiv = The total divisions horizontally for the spatial index
+    	vDiv = The total divisions vertically for the spatial index
+    	clearScene = The function to use to clear the rendering scene ( canvas / dom / webgl / etc )
+    	addToScene = The function to use to add a renderer to the scene ( canvas / dom / webgl / etc )
+    */
+
+    function SceneRenderer(w, h, hDiv, vDiv, clearScene, addToScene) {
+      this.clearScene = clearScene;
+      this.addToScene = addToScene;
       if (!this.viewport) {
         this.viewport = new Rect(0, 0, 100, 100);
       }
+      if (!this.clearScene) {
+        this.clearScene = function() {
+          return null;
+        };
+      }
+      if (!this.addToScene) {
+        this.addToScene = function(renderer, rendererData, x, y) {
+          return null;
+        };
+      }
       this.index = new SceneIndex(w, h, hDiv, vDiv);
-      this.renderList = [];
+      this.factory = new RendererFactory();
     }
 
     /*
-     add()
+    	add()
     
-     Add an object to the Renderer.
-     object must implement a "rect" property of type indexing.Rect
+    	Add an object to the Renderer.
+    	object must implement a "rect" property of type indexing.Rect
     */
 
 
-    SceneRenderer.prototype.add = function(object) {
-      return this.index.add(object);
+    SceneRenderer.prototype.add = function(rendererData) {
+      var f,
+        _this = this;
+      this.index.add(rendererData);
+      f = function(func) {
+        return null;
+      };
+      f(function() {
+        return _this.index.add();
+      });
+      return null;
     };
 
     /*
-     remove()
+    	remove()
     
     	Removes an object from the Renderer.
     */
 
 
-    SceneRenderer.prototype.remove = function(object) {
-      return this.index.remove(object);
+    SceneRenderer.prototype.remove = function(rendererData) {
+      return this.index.remove(rendererData);
     };
 
     /*
-     viewportSize()
+    	update()
     
-     Resize the viewport.
+    	Updates an object in the index.
+    */
+
+
+    SceneRenderer.prototype.update = function(rendererData) {
+      return this.index.update(rendererData);
+    };
+
+    /*
+    	viewportSize()
+    
+    	Resize the viewport.
     */
 
 
@@ -274,9 +532,9 @@ Imports
     };
 
     /*
-     viewportMove()
+    	viewportMove()
     
-     Position the viewport.
+    	Position the viewport.
     */
 
 
@@ -286,35 +544,41 @@ Imports
     };
 
     /*
-     registerRenderer()
+    	registerRenderer()
     
-     Used to assign a renderer  to a specific object type
-     Not implemented yet.
-     Would need some RendererFactory class.
+    	Register a specific rendererType to a rendererClass.
+    	Specify a poolCount if you want to instantiate a number of renderers up front.
     */
 
 
-    SceneRenderer.prototype.registerRenderer = function(rendererClass, rendererType) {};
+    SceneRenderer.prototype.registerRenderer = function(rendererType, rendererClass, poolCount) {
+      this.factory.registerRenderer(rendererType, rendererClass, poolCount);
+      return null;
+    };
 
     /*
-     render()
+    	render()
     
-     Renders the
+    	Handles the rendering and instantiating of the renderers.
+    	The clearScene() and addToScene() delegates need to be specified
+    	as they do the positioning and assigning of rendererData.
     */
 
 
     SceneRenderer.prototype.render = function() {
-      var object, _i, _len, _ref, _results;
-      this.easelStage.removeAllChildren();
+      var renderer, rendererData, x, y, _i, _len, _ref, _results;
+      this.clearScene();
       this.renderList.splice(0);
       this.renderList = this.index.find(this.viewport);
+      this.factory.detach();
       _ref = this.renderList;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        object = _ref[_i];
-        object.renderer.x = object.rect.left - this.viewport.left;
-        object.renderer.y = object.rect.top - this.viewport.top;
-        _results.push(this.easelStage.addChild(object.renderer));
+        rendererData = _ref[_i];
+        renderer = this.factory.create(ren);
+        x = object.rect.left - this.viewport.left;
+        y = object.rect.top - this.viewport.top;
+        _results.push(this.addToScene(renderer, rendererData, x, y));
       }
       return _results;
     };

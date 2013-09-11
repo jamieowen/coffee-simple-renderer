@@ -6,11 +6,12 @@
 
 		<title>Coffee-Simple-Spatial</title>
 
-		<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-		<script type="text/javascript" src="http://code.createjs.com/createjs-2013.05.14.min.js"></script>
+		<script type="text/javascript" src="vendor/jquery.js"></script>
+		<script type="text/javascript" src="vendor/createjs-2013.05.14.min.js"></script>
 		<script type="text/javascript" src="scripts/coffee-simple-renderer.js"></script>
 
 		<script type="text/javascript">
+
 
 			function init()
 			{
@@ -29,7 +30,27 @@
 				var obj = null;
 				var sWidth = 80;
 				var sHeight = 40;
-				var renderer = new SceneRenderer(sWidth*size,sHeight*size,5,5,null,easelStage);
+
+				// create delegates for rendering to Easel
+				var that = this;
+				var clearScene = function(){
+					console.log( this );
+					console.log( easelStage );
+
+					that.easelStage.removeAllChildren();
+				}
+
+				var addToScene = function(renderer,rendererData,x,y){
+					renderer.x = x;
+					renderer.y = y;
+
+					// set renderer data
+					//renderer.data = rendererData;
+
+					that.easelStage.addChild(renderer);
+				}
+
+				var renderer = new SceneRenderer(sWidth*size,sHeight*size,5,5,clearScene,addToScene);
 
 				// Size the browser window.
 				$("div#scrollarea").width(sWidth*size);
@@ -68,8 +89,8 @@
 					renderer.render(false);
 					easelStage.update();
 				}
-				//handleTick();
-				createjs.Ticker.addEventListener("tick", handleTick);
+				handleTick();
+				//createjs.Ticker.addEventListener("tick", handleTick);
 			}
 		</script>
 
