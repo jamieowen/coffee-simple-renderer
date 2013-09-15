@@ -11,6 +11,8 @@ module.exports = class RendererFactory
 		@rendererPool = {}
 		# the list of renderers currently in use.
 		@rendererList = []
+		# keep track of pool count
+		@poolCount = {}
 
 
 	###
@@ -20,6 +22,8 @@ module.exports = class RendererFactory
 	register:(rendererType, rendererClass, poolCount)->
 		if not poolCount
 			poolCount = 0
+
+		@poolCount[rendererType] = [rendererType,null]
 
 		if not @rendererMap[rendererType]
 			@rendererMap[rendererType] = rendererClass
@@ -36,9 +40,36 @@ module.exports = class RendererFactory
 	Detaches renderers and assumes they may not be used again.
 	But holds on to association of rendererData to rendererObject
 	to main
+  ( although not doing that now )
 	###
 	preCreate:() ->
-		null
+		#console.log "Pre Create"
+		for renderer in @rendererList
+			pool = @rendererPool[renderer.data.rendererType]
+			if not pool
+				console.log "no renderer for :" + renderer.data
+			else
+				pool.push renderer
+
+		for key of @rendererPool
+			@poolCount[key][1] = @rendererPool[key].length
+
+		@rendererList.splice(0)
+
+	newRendererCount:null
+
+	###
+  Returns an array of rendererTypes and their current pool count.
+  ###
+	getPoolCount:()->
+
+		count = []
+		for key of @poolCount
+			count.push( @poolCount[key].join(":") )
+
+		return count
+
+
 
 
 	###
@@ -46,12 +77,27 @@ module.exports = class RendererFactory
 	of the rendererData object.
 	###
 	create:(rendererData) ->
-		pool = @rendererPool[rendererType]
+		pool = @rendererPool[rendererData.rendererType]
+
+		# we don't have an assigned renderer for the rendererType
 		if not pool
 			return null
 
+		@newRendererCount = 0
+		renderer = null
 		if pool.length
-			return pool.pop()
+			renderer = pool.pop()
+			@rendererList.push renderer
+		else
+			@newRendererCount++
+			rendererClass = @rendererMap[rendererData.rendererType]
+			renderer = new rendererClass()
+			@rendererList.push renderer
+
+		#console.log "New Renderer Count :" + @newRendererCount
+
+		return renderer
+
 
 
 	###

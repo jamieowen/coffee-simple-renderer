@@ -15,6 +15,95 @@
 
 			function init()
 			{
+				var Rect = require("indexing/Rect");
+
+				// Create Easel Stage.
+				var canvas = document.getElementById("canvas");
+				var easelStage = new createjs.Stage(canvas);
+
+				$("div#scrollarea").width(3000);
+				$("div#scrollarea").height(3000);
+
+				canvas.width = 500;
+				canvas.height = 500;
+
+				var shapes = [];
+				var factoryIndex = 0;
+				function shapeFactory(rect,color){
+					var shape;
+					if(factoryIndex>=shapes.length){
+						shape = new createjs.Shape();
+						shapes.push(shape);
+					}else{
+						shape = shapes[factoryIndex];
+					}
+					factoryIndex++;
+
+					shape.graphics.clear().beginFill(color).drawRect(0,0,rect.width,rect.height);
+					shape.x = rect.left;
+					shape.y = rect.top;
+
+					return shape;
+				}
+
+				//var scene = { rect:new Rect(150,150,200,200), color:"blue" };
+				//var viewport = { rect:new Rect(150,150,40,40), color:"red" };
+
+				var scene = { rect:new Rect(0,0,200,200), color:"blue" };
+				var viewport = { rect:new Rect(0,0,40,40), color:"red" };
+
+
+				var diff = [];
+				var i;
+				function render(){
+					easelStage.removeAllChildren();
+					easelStage.addChild( shapeFactory(scene.rect,scene.color) );
+					easelStage.addChild( shapeFactory(viewport.rect,viewport.color) );
+					for( i = 0; i<diff.length; i++ ){
+						easelStage.addChild( shapeFactory(diff[i].rect,diff[i].color) );
+					}
+					easelStage.update();
+				}
+
+				var colors = ["green","yellow","pink","brown"];
+				$(window).scroll(function(){
+
+					viewport.rect.left = $(window).scrollLeft();
+					viewport.rect.top = $(window).scrollTop();
+
+					//diff = viewport.rect.split(scene.rect);
+					//diff = scene.rect.split(viewport.rect);
+
+					diff = viewport.rect.wrapped(scene.rect);
+					//diff = viewport.rect.difference(scene.rect);
+					//diff = scene.rect.difference(viewport.rect);
+
+					for( i = 0; i<diff.length; i++ ){
+						diff[i] = { rect:diff[i], color:colors[i]};
+					}
+
+					//console.log(scene.rect.contains(viewport.rect));
+					console.log(viewport.rect.intersects(scene.rect));
+				});
+
+				createjs.Ticker.addEventListener("tick", render);
+
+			}
+
+
+			function init1()
+			{
+				var canvas = document.getElementById("canvas");
+				var EaselRenderer = require("examples/easel/EaselRenderer");
+				var renderer = new EaselRenderer(canvas);
+
+				$("div#scrollarea").width(renderer.builder.totalWidth);
+				$("div#scrollarea").height(renderer.builder.totalHeight);
+
+			}
+
+			function init2()
+			{
 				// fetch imports
 				var SceneRenderer = require("renderer/SceneRenderer");
 				var Rect = require("indexing/Rect");
@@ -99,5 +188,6 @@
 	<body onload="init();">
 		<canvas id="canvas" style="position:fixed; top:0px; left:0px;"></canvas>
 		<div id="scrollarea"/>
+		<div id="output" style="position:fixed; top:0px; left:0px;z-index:1000"></div>
 	</body>
 </html>

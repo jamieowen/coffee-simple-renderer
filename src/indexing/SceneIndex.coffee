@@ -13,6 +13,9 @@ module.exports = class SceneIndex
 		@vDiv = vDiv == 0 ? 1 : vDiv
 		@hDiv = hDiv == 0 ? 1 : hDiv
 
+		# performance
+		@intersectionTests = 0
+
 		# setup partitions.
 		pWidth = w/hDiv
 		pHeight = h/vDiv
@@ -42,11 +45,14 @@ module.exports = class SceneIndex
 	find:(rect) ->
 		results = []
 
+		@intersectionTests = 0
 		for partition in @partitions
+			@intersectionTests++
 			if rect.intersects partition.bounds
 				for object in partition.objects
+					@intersectionTests++
 					if rect.intersects object.rect
-						results.push object
+						results.push object if results.indexOf(object) < 0
 
 		return results
 

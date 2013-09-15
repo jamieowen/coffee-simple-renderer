@@ -42,6 +42,7 @@ module.exports = class SceneRenderer
 		# create the scene index and the factory
 		@index = new SceneIndex w,h,hDiv,vDiv
 		@factory = new RendererFactory()
+		@renderList = []
 
 
 	###
@@ -53,17 +54,6 @@ module.exports = class SceneRenderer
 	add:(rendererData) ->
 		@index.add rendererData
 
-		f = (func) ->
-			null
-
-		f( ()=>
-			@index.add()
-		)
-
-		null
-
-
-
 	###
 	remove()
 
@@ -71,7 +61,6 @@ module.exports = class SceneRenderer
 	###
 	remove:(rendererData)->
 		@index.remove rendererData
-
 
 	###
 	update()
@@ -95,7 +84,6 @@ module.exports = class SceneRenderer
 	Position the viewport.
 	###
 	viewportPos:(x,y) ->
-		console.log x,y
 		@viewport.update x,y,@viewport.width,@viewport.height
 
 	###
@@ -105,7 +93,7 @@ module.exports = class SceneRenderer
 	Specify a poolCount if you want to instantiate a number of renderers up front.
 	###
 	registerRenderer: (rendererType, rendererClass, poolCount) ->
-		@factory.registerRenderer rendererType,rendererClass,poolCount
+		@factory.register rendererType,rendererClass,poolCount
 		null
 
 
@@ -120,22 +108,25 @@ module.exports = class SceneRenderer
 		# clear the scene
 		@clearScene()
 
-		# clear the renderList
+		# clear the renderList ( probably don't need this as the factory contains all renderers )
 		@renderList.splice(0)
 		@renderList = @index.find @viewport
 
-		# notify the factory
-		@factory.detach()
+		# free up renderers
+		@factory.preCreate()
 
+		renderer = {}
 		# and add to stage
 		for rendererData in @renderList
-			renderer = @factory.create ren
-			x = object.rect.left - @viewport.left
-			y = object.rect.top - @viewport.top
+			renderer = @factory.create rendererData
+
+			x = rendererData.rect.left - @viewport.left
+			y = rendererData.rect.top - @viewport.top
 
 			@addToScene renderer,rendererData,x,y
 
-			#@easelStage.addChild object.renderer
+		# finalise renderers
+		@factory.postCreate()
 
 
 
