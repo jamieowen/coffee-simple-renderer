@@ -608,6 +608,15 @@
     };
 
     /*
+     alternative mod function ( handles negatives correctly )
+    */
+
+
+    Rect.prototype.mod = function(m, n) {
+      return ((m % n) + n) % n;
+    };
+
+    /*
     	Wraps the contents of a smaller rect around a bigger rect.
     */
 
@@ -615,17 +624,27 @@
     Rect.prototype.wrapped = function(rect) {
       var ab, al, ar, at, bb, br, lrFlip, result, tbFlip;
       result = [];
-      al = ((this.left - rect.left) % rect.width) + rect.left;
-      ar = (((this.left + this.width) - rect.left) % rect.width) + rect.left;
-      at = ((this.top - rect.top) % rect.height) + rect.top;
-      ab = (((this.top + this.height) - rect.top) % rect.height) + rect.top;
+      al = this.mod(this.left - rect.left, rect.width) + rect.left;
+      ar = this.mod((this.left + this.width) - rect.left, rect.width) + rect.left;
+      at = this.mod(this.top - rect.top, rect.height) + rect.top;
+      ab = this.mod((this.top + this.height) - rect.top, rect.height) + rect.top;
       lrFlip = ar < al;
       tbFlip = ab < at;
       br = rect.left + rect.width;
       bb = rect.top + rect.height;
       if (!lrFlip && !tbFlip && al >= rect.left && ar <= br && at >= rect.top && ab <= bb) {
-        console.log("Straight Contain : (lrFlip, tbFlip) " + lrFlip + " " + tbFlip);
         result.push(new Rect(al, at, this.width, this.height));
+      } else if (lrFlip && !tbFlip) {
+        result.push(new Rect(al, at, br - al, this.height));
+        result.push(new Rect(rect.left, at, ar - rect.left, this.height));
+      } else if (tbFlip && !lrFlip) {
+        result.push(new Rect(al, rect.top, this.width, ab - rect.top));
+        result.push(new Rect(al, at, this.width, bb - at));
+      } else if (lrFlip && tbFlip) {
+        result.push(new Rect(rect.left, rect.top, ar - rect.left, ab - rect.top));
+        result.push(new Rect(al, rect.top, br - al, ab - rect.top));
+        result.push(new Rect(rect.left, at, ar - rect.left, bb - at));
+        result.push(new Rect(al, at, br - al, bb - at));
       }
       return result;
     };

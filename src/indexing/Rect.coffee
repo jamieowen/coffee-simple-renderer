@@ -89,17 +89,22 @@ module.exports = class Rect
 		return result
 
 	###
+  alternative mod function ( handles negatives correctly )
+  ###
+	mod:(m,n)->
+		return ((m % n) + n) % n
+
+	###
 	Wraps the contents of a smaller rect around a bigger rect.
 	###
 	wrapped:(rect)->
 
 		result = []
 
-		# create wrapped coords
-		al = ( ( @left-rect.left ) % rect.width ) + rect.left
-		ar = ( ( (@left + @width)-rect.left )% rect.width ) + rect.left
-		at = ( ( @top-rect.top ) % rect.height ) + rect.top
-		ab = ( ( ( @top + @height )-rect.top)%rect.height ) + rect.top
+		al = @mod( @left-rect.left,rect.width) + rect.left
+		ar = @mod((@left + @width)-rect.left,rect.width) + rect.left
+		at = @mod( @top-rect.top,rect.height ) + rect.top
+		ab = @mod( (@top + @height )-rect.top,rect.height )+rect.top
 
 		# after wrapping, check which edges have flipped ( have wrapped )
 		lrFlip = ar < al
@@ -110,8 +115,24 @@ module.exports = class Rect
 
 		# check straight containment
 		if not lrFlip && not tbFlip && al >= rect.left && ar <= br && at >= rect.top && ab <= bb
-			console.log "Straight Contain : (lrFlip, tbFlip) " + lrFlip + " " + tbFlip
 			result.push new Rect(al,at,@width,@height)
+		else if lrFlip and not tbFlip
+			# left or right edge intersection
+			result.push new Rect(al,at,br-al,@height)
+			result.push new Rect(rect.left,at,ar-rect.left,@height)
+		else if tbFlip and not lrFlip
+			# top or bottom edge intersection
+			result.push new Rect(al,rect.top,@width,ab-rect.top)
+			result.push new Rect(al,at,@width,bb-at)
+		else if lrFlip and tbFlip
+			# top left
+			result.push new Rect(rect.left,rect.top,ar-rect.left,ab-rect.top)
+			# top right
+			result.push new Rect(al,rect.top,br-al,ab-rect.top)
+			# bottom left
+			result.push new Rect(rect.left,at,ar-rect.left,bb-at)
+			# bottom right
+			result.push new Rect(al,at,br-al,bb-at)
 
 		return result
 

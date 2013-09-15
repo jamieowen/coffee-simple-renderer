@@ -46,11 +46,11 @@
 					return shape;
 				}
 
-				//var scene = { rect:new Rect(150,150,200,200), color:"blue" };
-				//var viewport = { rect:new Rect(150,150,40,40), color:"red" };
+				var scene = { rect:new Rect(150,150,300,260), color:"blue" };
+				var viewport = { rect:new Rect(150,150,90,41), color:"red" };
 
-				var scene = { rect:new Rect(0,0,200,200), color:"blue" };
-				var viewport = { rect:new Rect(0,0,40,40), color:"red" };
+				//var scene = { rect:new Rect(0,0,200,200), color:"blue" };
+				//var viewport = { rect:new Rect(0,0,40,40), color:"red" };
 
 
 				var diff = [];
@@ -83,7 +83,7 @@
 					}
 
 					//console.log(scene.rect.contains(viewport.rect));
-					console.log(viewport.rect.intersects(scene.rect));
+					//console.log(viewport.rect.intersects(scene.rect));
 				});
 
 				createjs.Ticker.addEventListener("tick", render);
